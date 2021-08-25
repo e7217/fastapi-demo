@@ -18,7 +18,7 @@ from appUsers.models.users import User, UserCreate, UserDB, UserTable, UserUpdat
 
 
 # get environments
-load_dotenv(dotenv_path="../.dev.env", verbose=True)
+load_dotenv(dotenv_path="./.dev.env", verbose=True)
 host = os.getenv("DB_HOST")
 port = os.getenv("DB_PORT")
 user = os.getenv("DB_USER")
@@ -35,7 +35,7 @@ user_db = SQLAlchemyUserDatabase(UserDB, database, users)
 # JWT
 auth_backends = []
 jwt_authentication = JWTAuthentication(
-    secret=SECRET, lifetime_seconds=3600, tokenUrl="auth/jwt/login"
+    secret=SECRET, lifetime_seconds=3600, tokenUrl="api/auth/jwt/login"
 )
 auth_backends.append(jwt_authentication)
 
@@ -48,9 +48,23 @@ fastapi_users = FastAPIUsers(
     UserDB,
 )
 
+users_router = APIRouter()
+
+@users_router.on_event("startup")
+async def startup() -> None:
+    database_ = database
+    if not database_.is_connected:
+        await database_.connect()
+
+@users_router.on_event("shutdown")
+async def shutdown() -> None:
+    database_ = database
+    if database_.is_connected:
+        await database_.disconnect()
 
 def get_users_router():
-    users_router = APIRouter()
+
+    print(DATABASE_URL)
 
     def on_after_register(user: UserDB, request: Request):
         print(f"User {user.id} has registered.")
