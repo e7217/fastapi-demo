@@ -22,7 +22,7 @@ database = databases.Database(DATABASE_URL)
 
 
 app = FastAPI()
-app.include_router(auth.router, tags=["Authentication"], prefix="/api")
+app.include_router(auth.get_users_router(), tags=["Authentication"], prefix="/api")
 
 @app.on_event("startup")
 async def startup():
